@@ -32,10 +32,11 @@ gsl_matrix* penrose(gsl_matrix* A){
 	unsigned int n = A->size2;
 	unsigned int m = A->size1;
 
-
+	double prec_machine = 1E-10;
 	gsl_matrix *V, *Sigma_inv, *U, *A_pinv;
 	gsl_vector *_tmp_vec, *s;
 	gsl_matrix *_tmp_mat;
+	gsl_matrix * VS_product;
 
 	bool transpose = false;
 	
@@ -86,7 +87,7 @@ gsl_matrix* penrose(gsl_matrix* A){
 	gsl_matrix_set_zero(Sigma_inv);
 
 	for(int i = 0;i<s->size;i++){
-		if(gsl_vector_get(s,i)>0){
+		if(gsl_vector_get(s,i)>prec_machine){
 			gsl_matrix_set(Sigma_inv,i,i,1/ gsl_vector_get(s,i));
 		}
 		else{
@@ -99,9 +100,26 @@ gsl_matrix* penrose(gsl_matrix* A){
 	printf("\n Matriz U\n");
 	mostrar_matriz(U);
 
+
+	/* Compute C = A B */
+
+ 	// gsl_blas_dgemm (CblasNoTrans, CblasNoTrans,1.0, &A.matrix, &B.matrix, 0.0, &C.matrix);
+	VS_product = gsl_matrix_alloc(n, m);
+	gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1., V, Sigma_inv, 0., VS_product);
+
+	if (transpose){
+		A_pinv = gsl_matrix_alloc(m,n);
+		//U*(V*S⁺)ᵀ
+		gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1., U, VS_product, 0., A_pinv);
+	}
+	else{
+		A_pinv = gsl_matrix_alloc(n,m);
+		//V*S⁺*Uᵀ
+		gsl_blas_dgemm(CblasNoTrans, CblasTrans, 1., VS_product, U, 0., A_pinv);
+	}
 	//A_pinv= V * Sigma_inv * U_transpose
  
-	return	A;
+	return	A_pinv;
 
 }
 
@@ -144,7 +162,8 @@ int main()
 	printf("\nCalculando Inversa de Moore-Penrose\n");
 	A_pinv = penrose(A);
 	//mostrar_matriz(A_pinv);
-
+	printf("\nRESULTADO Inversa de Moore-Penrose\n");
+	mostrar_matriz(A_pinv);
 	printf("Fin.\n");
 
 
