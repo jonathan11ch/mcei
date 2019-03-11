@@ -282,6 +282,41 @@ gsl_matrix* calculate_cholesky(gsl_matrix *A){
 }
 
 
+gsl_matrix* solve_linear(gsl_matrix *L, gsl_matrix *b){
+  gsl_matrix *x = gsl_matrix_alloc(L->size1, 1);
+  gsl_matrix *y = gsl_matrix_alloc(L->size1, 1);
+  gsl_matrix *Lt = gsl_matrix_alloc(L->size1, L-> size2);
+  int i = 0;
+  int n = L->size1;
+  int j = 0;
+  double c = 0;
+  gsl_matrix_set_zero(x);
+  gsl_matrix_set_zero(y);
+
+  //Sustitucion progresiva
+  for (i = 0; i < n; i++ ){
+      c = gsl_matrix_get(b, i, 0);
+      for (j = 0; j < i; j ++ ){
+        c = c - gsl_matrix_get(L, i, j)*gsl_matrix_get(y, j, 0);
+      }
+      c = c/gsl_matrix_get(L, i, i);
+      gsl_matrix_set(y, i, 0, c);
+  }
+  gsl_matrix_transpose_memcpy (Lt, L);
+
+  //Sustitucion regresiva
+  for (i = n-1; i >= 0; i-- ){
+    c = gsl_matrix_get(y, i, 0);
+    for (j = n-1; j > i; j--){
+      c =  c - gsl_matrix_get(Lt, i, j)*gsl_matrix_get(x, j, 0);
+    }
+    c = c/gsl_matrix_get(Lt, i, i);
+    gsl_matrix_set(x, i, 0, c);
+  }
+  return x;
+}
+
+
 int main(){
 
 	int m,n;            // Número de filas y columnas de la matriz de usuario
@@ -298,6 +333,8 @@ int main(){
 
   gsl_matrix *A = gsl_matrix_alloc(M,N);
   gsl_matrix *L = gsl_matrix_alloc(M,N);
+	gsl_matrix *x = gsl_matrix_alloc(M,1);
+  gsl_matrix *b = gsl_matrix_alloc(M,1);
 	printf("Introduzca los elementos de la matriz A(%dx%d)\n",m,n);
 	double elem;
 	for(int i=0; i<M; i++){
@@ -307,6 +344,13 @@ int main(){
 			gsl_matrix_set(A, i, j, elem);
     		}
   	}
+
+	printf("\nIntroduzca los elementos de la matriz b(%dx1)\n",m);
+	for(int i=0; i<M; i++){
+				printf("b%d,1: ", i+1);
+				scanf("%lf", &elem);
+				gsl_matrix_set(b, i, 0, elem);
+		}
 
   res = calculate_positive_definite_matrix(A);
   printf("The matrix result is ...%d\n", res );
@@ -321,6 +365,10 @@ int main(){
 
     printf("Determinante de A calculado con Cholesky: %f\n", detA);
     printf("%s\n","########################" );
+
+		x = solve_linear(L, b);
+		printf("Solucion del sistema Ax = b: \n");
+    print_matrix(x);
   }else{
     printf("%s\n","La descomposición de Cholesky no se puede realizar ya que la matriz no es definida positivamente" );
   }
