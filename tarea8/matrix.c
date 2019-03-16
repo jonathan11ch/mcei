@@ -1,43 +1,59 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-
+//structure definition to handle Matrix
 typedef struct Matrix{
 	double *mat;
 	int m;
 	int n;
 }Matrix,*Matrix_ptr;
 
-Matrix_ptr matrix_alloc(int m, int n){
-	Matrix_ptr M = (Matrix_ptr)malloc(sizeof(Matrix));
 
-	//develop allocation
+typedef struct LDR_Matrix{
+	Matrix_ptr L;
+	Matrix_ptr R;
+	Matrix_ptr D;
+}LDR_Matrix, *LDR_Matrix_ptr;
+
+
+
+Matrix_ptr matrix_alloc(int m, int n){
+	//allocate memory for the matrix structure
+	Matrix_ptr M = (Matrix_ptr)malloc(sizeof(Matrix));
+	//allocate memory for the matrix
 	double *matriz = (double *)calloc(m*n,sizeof(double));
+	//assign pointers to the matrix pointer
 	M->mat = matriz;
 	M->m = m;
 	M->n = n;
 	return M;
 }
 
+//set value val to the matrix A in the position i,j
 void set_matrix_value(Matrix_ptr mat, int i, int j, double val){
 
 	*(mat->mat + (j + (i * mat->n))) = val;
 }
 
-
+//get value i,j from the matrix A
 double get_matrix_value(Matrix_ptr mat, int i, int j){
 
 	return *(mat->mat + (j + (i * mat->n)));
 }
 
-
+//matrix multiplication A*B
 Matrix_ptr mult_matrix(Matrix_ptr A, Matrix_ptr B){
 
 	double val,a,b;
 	int m = A->m;
 	int n = B->n;
-	Matrix_ptr R =  matrix_alloc(m,n);
 
+	if(A->n != B->m){
+		return -1;
+	}
+	//allocate memory for resulting matrix
+	Matrix_ptr R =  matrix_alloc(m,n);
+	//perform dot product
 	for(int i = 0; i< m; i++){
 		for(int j = 0; j< n; j++){
 			val = 0;
@@ -49,7 +65,6 @@ Matrix_ptr mult_matrix(Matrix_ptr A, Matrix_ptr B){
 			}
 		}
 	}
-
 	return R;
 }
 
@@ -112,6 +127,82 @@ Matrix_ptr user_request_matrix(){
 }
 
 
+
+LDR_Matrix_ptr LDR_decomposition(Matrix_ptr M){
+
+	int m = M->m;
+	int n = M->n;
+	double val;
+	//allocate memory for the ldr structure
+	LDR_Matrix_ptr ldr = (LDR_Matrix_ptr)malloc(sizeof(LDR_Matrix));
+	//allocate memory for the three matrices L,R and def
+	ldr->L = matrix_alloc(m,n);
+	ldr->D = matrix_alloc(m,n);
+	ldr->R = matrix_alloc(m,n);
+
+	for(int i = 0; i<m; i++){
+		for(int j = 0; j< n; j++){
+			val = get_matrix_value(M,i,j);
+			if(i == j){
+				set_matrix_value(ldr->D,i,j,val);
+			}
+			else if(i > j){
+				set_matrix_value(ldr->L, i,j,val);
+			}
+			else{
+				set_matrix_value(ldr->R,i,j,val);
+			}
+		}
+
+	}
+	return ldr;
+}
+
+
+double det3x3(Matrix_ptr M){
+	double a11,a22,a33,a12,a13,a21,a23,a31,a32;
+	double det;
+	a11 = get_matrix_value(M,1,1);
+	a12 = get_matrix_value(M,1,2);
+	a13 = get_matrix_value(M,1,3);
+	a21 = get_matrix_value(M,2,1);
+	a22 = get_matrix_value(M,2,2);
+	a23 = get_matrix_value(M,2,3);
+	a31 = get_matrix_value(M,3,1);
+	a32 = get_matrix_value(M,3,2);
+	a33 = get_matrix_value(M,3,3);
+	det = (a11*a22*a33) + (a12*a23*a31) + (a13*a21*a32) - ((a31*a22*a13)+(a32*a23*a11)+(a33*a21*a12));
+	return det;
+}
+
+Matrix_ptr adjoint_3x3(Matrix_ptr M){
+	double a11,a22,a33,a12,a13,a21,a23,a31,a32;
+	int m = M->m;
+	int n = M->n;
+	Matrix_ptr Adj = matrix_alloc(m,n);
+	a11 = get_matrix_value(M,1,1);
+	a12 = get_matrix_value(M,1,2);
+	a13 = get_matrix_value(M,1,3);
+	a21 = get_matrix_value(M,2,1);
+	a22 = get_matrix_value(M,2,2);
+	a23 = get_matrix_value(M,2,3);
+	a31 = get_matrix_value(M,3,1);
+	a32 = get_matrix_value(M,3,2);
+	a33 = get_matrix_value(M,3,3);
+	set_matrix_value(Adj, 1,1, a22*a33-a32*a23);
+	set_matrix_value(Adj, 1,2, a21*a33-a31*a23);
+	set_matrix_value(Adj, 1,3, a21*a32-a31*a22);
+	set_matrix_value(Adj, 2,1, a12*a33-a32*a13);
+	set_matrix_value(Adj, 2,2, a11*a33-a31*a13);
+	set_matrix_value(Adj, 2,3, a11*a32-a12*a31);
+	set_matrix_value(Adj, 3,1, a12*a23-a22*a13);
+	set_matrix_value(Adj, 3,2, a11*a23-a21*a13);
+	set_matrix_value(Adj, 3,3, a11*a22-a21*a12);
+
+	return Adj;
+
+}
+
 int main()
 {
 	/* code */
@@ -125,7 +216,7 @@ int main()
 	printf("%s\n","#############4###########" );
 	//C = matrix_alloc(3,4);
 	printf("%s\n","########################" );
-
+set_matrix_value(Adj, 1,1,);
 
 
 
@@ -159,5 +250,16 @@ int main()
 
 	Matrix_ptr Z = user_request_matrix();
 
+
+	LDR_Matrix_ptr ldr =  LDR_decomposition(Z);
+	printf("%s\n","########################" );
+	print_matrix(ldr->L);
+	printf("%s\n","########################" );
+	print_matrix(ldr->D);
+	printf("%s\n","########################" );
+	print_matrix(ldr->R);
+
+
+	
 	return 0;
 }
