@@ -343,14 +343,14 @@ Matrix_ptr general_interation_method(Matrix_ptr A, Matrix_ptr B, Matrix_ptr b, M
 
 		norm_err = matrix_norm(err);
 		x_0 = x;
-		printf("Iteration error: %f, vs expected error: %f\n", norm_err, error );
+		//printf("Iteration error: %f, vs expected error: %f\n", norm_err, error );
 		free(err);
 		free(b_product);
 		iteration ++;
 	}
 	while(norm_err > error);
 
-	printf("Total number of iterations: %d\n",iteration );
+	printf("Numero total de iteraciones: %d\n",iteration );
 
 
 	return x;
@@ -365,7 +365,7 @@ Matrix_ptr jacobi_iteration_method(Matrix_ptr A, Matrix_ptr b, Matrix_ptr x_0){
 	Matrix_ptr B = ldr->D;
 
 	Matrix_ptr x= general_interation_method(A,B,b, x_0);
-	printf("Jacobi method solution\n");
+	printf("Solucion de x por Jacobi\n");
 	print_matrix(x);
 	return x;
 
@@ -379,7 +379,7 @@ Matrix_ptr gauss_seidel_iteration_method(Matrix_ptr A, Matrix_ptr b, Matrix_ptr 
 	Matrix_ptr B = sum_matrix(ldr->D, ldr->L);
 
 	Matrix_ptr x= general_interation_method(A,B,b, x_0);
-	printf("Gauss-seidel method solution\n");
+	printf("Solucion de x por Gauss-seidel\n");
 	print_matrix(x);
 	return x;
 
@@ -394,7 +394,7 @@ Matrix_ptr generate_hilbert_matrix(m){
 	for(int i =  0; i < m ;i++){
 		for(int j = 0; j < m; j++){
 			val = 1.0/(i+1+j+1-1);
-			printf("%f\n", val);
+			//printf("%f\n", val);
 			set_matrix_value(H, i,j, val);
 		}
 	}
@@ -406,10 +406,10 @@ Matrix_ptr generate_hilbert_matrix(m){
 }
 
 int main(){
-
 	//AAsk for matrix A, Matrix B and vector b
 	Matrix_ptr x_0 = matrix_alloc(3,1);
-	printf("%s\n", "Introduzca la Matriz A: " );
+	printf("\n\n ------------ PUNTO 1 ------------ \n\n" );
+	printf("%s\n", "Matriz A: " );
 	Matrix_ptr A = matrix_alloc(3,3);
 	set_matrix_value(A,0,0,5);
 	set_matrix_value(A,0,1,-1);
@@ -421,46 +421,52 @@ int main(){
 	set_matrix_value(A,2,1,1);
 	set_matrix_value(A,2,2,4);
 
-	print_matrix(A);
-	printf("%s\n", "Introduzca la Matriz B: " );
+	print_matrix(A);	
+	printf("\n");
+
+	printf("%s\n", "Matriz B: " );
 	Matrix_ptr B = matrix_alloc(3,3);
 
-	set_matrix_value(B,0,0,9);
-	set_matrix_value(B,0,1,-3);
-	set_matrix_value(B,0,2,-3);
-	set_matrix_value(B,1,0,7);
-	set_matrix_value(B,1,1,9);
-	set_matrix_value(B,1,2,-4);
-	set_matrix_value(B,2,0,8);
-	set_matrix_value(B,2,1,-7);
-	set_matrix_value(B,2,2,8);
+	set_matrix_value(B,0,0,4);
+	set_matrix_value(B,0,1,-2);
+	set_matrix_value(B,0,2,1);
+	set_matrix_value(B,1,0,5);
+	set_matrix_value(B,1,1,4);
+	set_matrix_value(B,1,2,2);
+	set_matrix_value(B,2,0,-5);
+	set_matrix_value(B,2,1,2);
+	set_matrix_value(B,2,2,4);
 	print_matrix(B);
+	printf("\n");
 
-
-	printf("%s\n", "Introduzca el vector b: " );
+	printf("%s\n", "Vector b: " );
 	Matrix_ptr b = matrix_alloc(3,1);
 	set_matrix_value(b, 0,0,10);
 	set_matrix_value(b, 1,0,11);
 	set_matrix_value(b, 2,0,3);
 	print_matrix(b);
-
-
+	printf("\n");
 	
+	printf("\n");
+	printf("%s\n","    ········METODO GENERAL·······" );
 	Matrix_ptr x =  general_interation_method(A,B,b, x_0);
-
-	printf("%s\n", "Iteracion de x " );
+	
+	printf("%s\n", "Iteracion de x: " );
 	print_matrix(x);
-	printf("%s\n","norma 2 de x" );
+	printf("\n");
+	printf("%s","Norma 2 de x: " );
 	double norm = matrix_norm(x);
-	printf("norma %f\n", norm);
+	printf("%f\n\n", norm);
 
-
-	printf("%s\n","········JACOBI·······" );
+	printf("%s\n","    ········JACOBI·······" );
 	x =jacobi_iteration_method(A,b, x_0);
 
-	printf("%s\n","········GAUSS-SEIDEL·······" );
+	printf("\n");
+	printf("%s\n","    ········GAUSS-SEIDEL·······" );
 	x = gauss_seidel_iteration_method(A,b, x_0);
 	
+	printf("\n");
+	printf("\n\n ------------ PUNTO 2 ------------ \n\n" );
 	Matrix_ptr H =  generate_hilbert_matrix(3);
 	Matrix_ptr b_1 = matrix_alloc(3,1);
 	set_matrix_value(b_1,0, 0, 1);
@@ -468,16 +474,18 @@ int main(){
 	set_matrix_value(b_1,2, 0, 3);
 
 	
-	set_matrix_value(x_0,0, 0, 0);
-	set_matrix_value(x_0,1, 0, 0);
-	set_matrix_value(x_0,2, 0, 0);
+	set_matrix_value(x_0,0, 0, 30);
+	set_matrix_value(x_0,1, 0, -190);
+	set_matrix_value(x_0,2, 0, 200);
+	printf("\n");
 	printf("%s\n","········GAUSS-SEIDEL para Hilbert·······" );
 	x_0 = gauss_seidel_iteration_method(H,b_1,x_0);
-	printf("%s\n","········JACOBI para Hilbert·······" );
-	x_0 = gauss_seidel_iteration_method(H,b_1,x_0);
+	printf("\n");
+	printf("\n");
 
-
-
+	int salida;
+	printf("\n Presione 0 para salir");
+	scanf("%d", &salida);
 	return 0;
 }
 
