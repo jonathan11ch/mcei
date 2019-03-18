@@ -468,11 +468,14 @@ int main(){
 	set_matrix_value(b_1,2, 0, 3);
 
 	
-	set_matrix_value(x_0,0, 0, 30);
-	set_matrix_value(x_0,1, 0, -190);
-	set_matrix_value(x_0,2, 0, 200);
+	set_matrix_value(x_0,0, 0, 0);
+	set_matrix_value(x_0,1, 0, 0);
+	set_matrix_value(x_0,2, 0, 0);
 	printf("%s\n","········GAUSS-SEIDEL para Hilbert·······" );
 	x_0 = gauss_seidel_iteration_method(H,b_1,x_0);
+	printf("%s\n","········JACOBI para Hilbert·······" );
+	x_0 = gauss_seidel_iteration_method(H,b_1,x_0);
+
 
 
 	return 0;
