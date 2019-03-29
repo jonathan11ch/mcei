@@ -21,6 +21,11 @@ typedef struct EigenStruct{
   double lambda;
 }EigenStruct, *EigenStruct_ptr;
 
+typedef struct SouriauMatrix{
+	Matrix_ptr Bn;
+	Matrix_ptr qns;
+}SouriauMatrix, *SouriauMatrix_ptr;
+
 Matrix_ptr matrix_alloc(int m, int n){
 	//allocate memory for the matrix structure
 	Matrix_ptr M = (Matrix_ptr)malloc(sizeof(Matrix));
@@ -82,7 +87,6 @@ void print_matrix(Matrix_ptr M){
 		printf("\n");
 	}
 }
-//add matrix
 
 //transpose a matrix
 Matrix_ptr matrix_transpose(Matrix_ptr M){
@@ -599,16 +603,148 @@ double over_relaxation_method(Matrix_ptr A, Matrix_ptr b, Matrix_ptr x_0, double
 	return w_min;
 }
 
+double get_trace(Matrix_ptr A){
+	int m = A->m;
+	int n = A->n;
+	int i = 0;
+	double accum = 0;
+	for(int i= 0; i<m;i++){
+		for(int j = 0 ;j<n; j++){/* code */
+			if (i ==j){
+				accum = accum + get_matrix_value(A,i,j);
+			}
+		}
+	}
+	return accum;
+}
+
+Matrix_ptr pow_matrix(Matrix_ptr A, int power){
+	int m = A->m;
+	int n = A->n;
+	int i = 0;
+	Matrix_ptr R = matrix_alloc(m,n);
+	R = get_identity_matrix(m,n);
+	if (power != 0){
+		for (i=1; i<=power; i++ ){
+			R = mult_matrix(R, A);
+		}
+	}
+	return R;
+}
+
+Matrix_ptr matrix_zeros(int m, int n){
+	Matrix_ptr A = matrix_alloc(m,n);
+	for(int i= 0; i<m;i++){
+		for(int j = 0 ;j<n; j++){
+			set_matrix_value(A, i, j, 0);
+		}
+	}
+	return A;
+}
+
+
+double leverrier_aux(int index_p, int index_s, int k, Matrix_ptr pol, Matrix_ptr A){
+	double p_value, s_value;
+	if (index_p==k || index_s==0){
+		return 0;
+	} else {
+		p_value = get_matrix_value(pol, 0, index_p);
+		s_value = get_trace(pow_matrix(A, index_s));
+		return p_value*s_value + leverrier_aux(index_p+1, index_s-1, k, pol, A);
+	}
+}
+
+Matrix_ptr leverrier_algorithm(Matrix_ptr A){
+	int m = A->m;
+	int n = A->n;
+	int k = 1;
+	double pk = 0;
+	//allocate memory for the ldr structure
+	Matrix_ptr pol = matrix_alloc(1,n+1);
+	set_matrix_value(pol, 0, 0, 1);
+	//allocate memory for the B and I
+	Matrix_ptr Ak = matrix_alloc(m,n);
+	for (k=1; k<=n; k++){
+		Ak = pow_matrix(A, k);
+		pk = (-1.0/k)*(get_trace(Ak) + leverrier_aux(1, k-1, k, pol, A));
+		set_matrix_value(pol, 0, k, pk);
+	}
+	return pol;
+}
+
+SouriauMatrix_ptr souriau_method(Matrix_ptr A){
+	int m = A->m;
+	int n = A->n;
+	int k = 1;
+	double qn = 0;
+	//allocate memory for the ldr structure
+	Matrix_ptr pol = matrix_alloc(1,n+1);
+	set_matrix_value(pol, 0, 0, 1);
+	//allocate structure
+	SouriauMatrix_ptr souriau = (SouriauMatrix_ptr)malloc(sizeof(SouriauMatrix));
+	souriau->Bn = matrix_alloc(m,n);
+	souriau->qns = matrix_alloc(1,n+1);
+	//allocate memory for the B and I
+	Matrix_ptr An = matrix_alloc(m,n);
+	Matrix_ptr Bn = matrix_alloc(m,n);
+	Matrix_ptr Bn_1 = matrix_alloc(m,n);
+	Matrix_ptr I = get_identity_matrix(m,n);
+
+	Bn = I;
+	for (k=1; k<=n; k++){
+		An = mult_matrix(A, Bn);
+		qn = (-1.0/k)*get_trace(An);
+		Bn_1 = Bn;
+		Bn = sum_matrix(An, scalar_mult(I, qn));
+		set_matrix_value(pol, 0, k, qn);
+	}
+	souriau->Bn = Bn_1;
+	souriau->qns = pol;
+	return souriau;
+}
+
+Matrix_ptr matrix_inverse_leverrier(Matrix_ptr pol, Matrix_ptr A){
+	int m = A->m;
+	int n = A->n;
+	Matrix_ptr A_inv = matrix_alloc(m, n);
+	A_inv = matrix_zeros(m, n);
+	for (int i=1; i<=n; i++){
+		A_inv = sum_matrix(A_inv, scalar_mult(pow_matrix(A, n-i), get_matrix_value(pol, 0, i-1)));
+	}
+	A_inv = scalar_mult(A_inv, (-1.0/get_matrix_value(pol, 0, n)));
+	return A_inv;
+}
+
+Matrix_ptr matrix_inverse_souriau(Matrix_ptr Bn_1, double qn){
+	Matrix_ptr A_inv = scalar_mult(Bn_1, (-1.0/qn));
+	return A_inv;
+}
+
+void print_polynomial(Matrix_ptr pol, char* var) {
+	for (int i = 0; i<pol->m; i++){
+		printf("      ");
+		for (int j = 0; j<pol->n; j++){
+			if ( pol->n - j -1 > 0){
+				printf("%.2f%s^%d \t",get_matrix_value(pol, i,j), var, pol->n -j-1 );
+			} else {
+				printf("%.2f\t",get_matrix_value(pol, i,j));
+			}
+
+		}
+		printf("\n");
+	}
+}
+
 int main(){
 	int opcion;
 	double error, w1, w2;
 	printf("\n    ---------------------------------------------" );
 	printf("\n   |        Metodos Computaionales (MCEI)        |" );
-	printf("\n   |                   Tarea 9                   |" );
+	printf("\n   |                  Tarea 10                   |" );
 	printf("\n    ---------------------------------------------" );
 	printf("\n   |                                             |" );
-	printf("\n   |  1. Metodos de Relajacion                   |" );
-	printf("\n   |  2. Valores y Vectores Propios              |" );
+	printf("\n   |  1. Polinomio Caracteristico e Inversa      |" );
+	printf("\n   |  2. Metodo QR                               |" );
 	printf("\n   |  3. Salir                                   |" );
 	printf("\n   |                                             |" );
 	printf("\n    ---------------------------------------------" );
@@ -620,27 +756,28 @@ int main(){
 			printf("\n\n      Se ha seleccionado la opcion (1)\n" );
 			printf("%s\n", "      Ingrese la matriz A\n");
 			Matrix_ptr A = user_request_matrix();
-			printf("%s\n", "      Ingrese el vector b\n");
-			Matrix_ptr b = user_request_matrix();
-			printf("%s\n", "      Ingrese el vector inicial X(0)\n");
-			Matrix_ptr x_0 = user_request_matrix();
-			printf("%s", "      Ingrese la precision deseada e: ");
-			scanf("%lf", &error );
-			//printf("\n%s\n", "      Utilizando metodo de relajacion" );
-			w1 = relaxation_method(A, b, x_0, error);
-			printf("      w optimo: %lf\n", w1 );
-			printf("\n%s\n", "      Utilizando metodo de sobre-relajacion" );
-			w2 = over_relaxation_method(A, b, x_0, error);
-			printf("      w optimo: %lf\n\n", w2 );
+			printf("\n%s", "      ---------------------------------------" );
+			printf("\n%s\n", "      Utilizando Algoritmo de Leverrier:" );
+			printf("%s\n", "      Polinomio Caracteristico:" );
+			Matrix_ptr pol1 = leverrier_algorithm(A);
+			print_polynomial(pol1, "x");
+			Matrix_ptr A_inv1 = matrix_inverse_leverrier(pol1, A);
+			printf("%s\n", "      Inversa:" );
+			print_matrix(A_inv1);
+			printf("\n\n%s", "      ---------------------------------------" );
+			printf("\n%s\n", "      Utilizando Metodo de Souriau" );
+			printf("%s\n", "      Polinomio Caracteristico:" );
+			SouriauMatrix_ptr sou = souriau_method(A);
+			print_polynomial(sou->qns, "x");
+			Matrix_ptr A_inv2 = matrix_inverse_souriau(sou->Bn, get_matrix_value(sou->qns, 0, sou->qns->n-1));
+			printf("%s\n", "      Inversa:" );
+			print_matrix(A_inv2);
 			break;
 		case 2:
 			printf("\n\n Se ha seleccionado la opcion (2)" );
-			printf("%s\n", "      Ingrese la matriz A\n");
-		  Matrix_ptr A1 = user_request_matrix();
-		  printf("%s\n", "      Ingrese el vector inicial X(0)\n");
-		  Matrix_ptr x1 = user_request_matrix();
-		  double e = 10e-5;
-		  EigenStruct_ptr eigen =  get_eigen_values(A1,x1,e);
+			/*
+			TODO:
+			QR Method*/
 			break;
 		case 3:
 			printf("\n      Finalizando programa\n\n" );
