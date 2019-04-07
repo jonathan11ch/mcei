@@ -483,6 +483,10 @@ int main(){
   Matrix_ptr A = user_request_matrix();
   int a,b;
   double err = 0.000001;
+  printf("%s\n", "INGRESE LA PRECISION DESEADA");
+  scanf("%lf", &err);
+
+  
   printf("%s\n","------------------ Metodo Ciclico -----------------" );
   a = jacobi_cyclic_method(A, err);
   printf("%s\n","------------------ Metodo Clasico -----------------" );
