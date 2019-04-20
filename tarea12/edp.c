@@ -183,7 +183,7 @@ void liebman_iteration(Matrix_ptr T){
 		error  = check_error(E, 0.0001);
 
 
-		printf("%s\n","#########################" );
+		printf("%s\n","#############error############" );
 		print_matrix(E);
 		printf("%s\n","-------------------------" );
 		printf("%s\n","New Matrix " );
