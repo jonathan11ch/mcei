@@ -458,7 +458,7 @@ int jacobi_cyclic_method(Matrix_ptr A, double e){
 		double val = get_matrix_value(A, i,i);
 		printf("Lamba(%d): %f\n",i, val);
 	}
-	printf("---------------Vectores Propios -------------\n");
+	printf("---------------Vectores Propios ---el ----------\n");
 
 	for(int i= 0;i<m ;i++){
 		printf("V(%d):\n", i);
