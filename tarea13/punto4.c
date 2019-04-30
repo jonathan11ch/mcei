@@ -293,9 +293,9 @@ void temperature_surface(int count){
 	/////////////////////////////////
 	Matrix_ptr S = matrix_alloc(n,n);
 	S = set_initial_condition(S);
-	printf("%s\n", "intial surface state" );
-	print_matrix(S);
-	printf("\n");
+	//printf("%s\n", "intial surface state" );
+	//print_matrix(S);
+	//printf("\n");
 
 	///////////create matrix
 
@@ -314,7 +314,7 @@ void temperature_surface(int count){
 		}
 	}
 
-	print_matrix(T);
+	//print_matrix(T);
 
 	Matrix_ptr T_l = matrix_alloc(3,1);
 	double val, t1,t2,t3;
@@ -346,11 +346,11 @@ void temperature_surface(int count){
 				set_matrix_value(T_l,j-1,0,val);
 
 			}
-			printf("%s\n", "fila");
-			print_matrix(T_l);
-			printf("%s\n", "solucion");
+			//printf("%s\n", "fila");
+			//print_matrix(T_l);
+			//printf("%s\n", "solucion");
 			T_l = tridiagonal_solution(T,T_l);
-			print_matrix(T_l);
+			//print_matrix(T_l);
 
 
 
@@ -388,11 +388,11 @@ void temperature_surface(int count){
 				set_matrix_value(T_l,i-1,0,val);
 
 			}
-			printf("%s\n", "fila");
-			print_matrix(T_l);
-			printf("%s\n", "solucion");
+			//printf("%s\n", "fila");
+			//print_matrix(T_l);
+			//printf("%s\n", "solucion");
 			T_l = tridiagonal_solution(T,T_l);
-			print_matrix(T_l);
+			//print_matrix(T_l);
 
 
 
@@ -404,11 +404,7 @@ void temperature_surface(int count){
 			
 
 		}
-		printf("%s\n", "update");
-		print_matrix(S);
-			//
-		printf("%s\n","" );
-		
+				
 		
 
 	}
@@ -418,13 +414,34 @@ void temperature_surface(int count){
 
 
 
+		print_matrix(S);
+			//
+		printf("%s\n","" );
+
 
 
 }
 
 int main(){
+	printf("%s\n", "Tiempo: 10 s" );
+	temperature_surface(5);
 
+	printf("%s\n", "Tiempo: 20 s" );
+	temperature_surface(2);
 
+	printf("%s\n", "Tiempo: 50 s" );
+	temperature_surface(5);
+
+	printf("%s\n", "Tiempo: 100 s" );
+	temperature_surface(10);
+
+	printf("%s\n", "Tiempo: 200 s" );
+	temperature_surface(20);
+
+	printf("%s\n", "Tiempo: 500 s" );
+	temperature_surface(50);
+
+	printf("%s\n", "Tiempo: 1000 s" );
 	temperature_surface(100);
 
 }
